@@ -4,10 +4,12 @@ use super::{
 };
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::{Terminal, prelude::Backend};
-use std::error::Error;
 use tui_input::backend::crossterm::EventHandler;
 
-pub fn run_app<B: Backend + 'static>(terminal: &mut Terminal<B>, app: &mut App) -> anyhow::Result<(), Box<dyn Error>> {
+pub fn run_app<B: Backend + 'static>(terminal: &mut Terminal<B>, app: &mut App) -> anyhow::Result<()>
+where
+	B::Error: std::error::Error + Send + Sync + 'static,
+{
 	loop {
 		terminal.draw(|frame| ui(frame, app))?;
 
@@ -25,12 +27,9 @@ pub fn run_app<B: Backend + 'static>(terminal: &mut Terminal<B>, app: &mut App) 
 					KeyCode::Char('p') => app.clip_password().unwrap_or_else(|e| app.show_error(e)),
 					KeyCode::Char('j') | KeyCode::Down => app.next_row(),
 					KeyCode::Char('k') | KeyCode::Up => app.previous_row(),
-					KeyCode::Char('l') | KeyCode::Right => app.nex_column(),
+					KeyCode::Char('l') | KeyCode::Right => app.next_column(),
 					KeyCode::Char('h') | KeyCode::Left => app.previous_column(),
-					KeyCode::Char('d' | 'D') => {
-						app.delete();
-						app.write().unwrap_or_else(|e| app.show_error(e));
-					}
+					KeyCode::Char('d' | 'D') => app.delete().unwrap_or_else(|e| app.show_error(e)),
 					KeyCode::Char('?') => app.current_screen = CurrentScreen::Help,
 					KeyCode::Char('n' | 'N') => app.current_screen = CurrentScreen::Popup(Kind::Add),
 					KeyCode::Char('m' | 'M') => {
@@ -55,22 +54,16 @@ pub fn run_app<B: Backend + 'static>(terminal: &mut Terminal<B>, app: &mut App) 
 							continue;
 						}
 
-						if kind == &Kind::Edit {
-							app.edit_password();
-						} else {
-							app.add_password();
-						}
+						let result = if kind == &Kind::Edit { app.commit_edit() } else { app.commit_add() };
 
-						app.input.reset_data();
-						if let Err(error) = app.write() {
-							app.show_error(error);
-							app.input.reset_data();
-							app.input_mode = InputMode::default();
-							continue;
+						match result {
+							Ok(()) => {
+								app.input.reset_data();
+								app.input_mode = InputMode::default();
+								app.current_screen = CurrentScreen::Main;
+							}
+							Err(error) => app.show_error(error),
 						}
-
-						app.input_mode = InputMode::default();
-						app.current_screen = CurrentScreen::Main;
 					}
 					// Switch fields
 					KeyCode::Down | KeyCode::Tab => app.next_input_mode(),

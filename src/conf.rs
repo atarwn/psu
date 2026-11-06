@@ -9,21 +9,9 @@ const APP_NAME: &str = "psu";
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
 	pub path: PathBuf,
-	pub fields: Fields,
-}
-
-#[derive(Deserialize, Default, Serialize, Debug)]
-pub struct Fields {
-	input: String,
-	login: String,
-	service: String,
 }
 
 impl Config {
-	pub fn new(path: PathBuf, fields: Fields) -> Self {
-		Self { path, fields }
-	}
-
 	pub fn gen_config() -> Result<()> {
 		let dir = Self::get_app_data_dir().context("Failed to obtain config directory.")?;
 
@@ -75,7 +63,6 @@ impl Default for Config {
 	fn default() -> Self {
 		Self {
 			path: dirs::home_dir().unwrap_or_default(),
-			fields: Fields::default(),
 		}
 	}
 }
@@ -89,11 +76,10 @@ mod test_config {
 		if let Some(home) = dirs::home_dir() {
 			let mut conf = Config {
 				path: "~/Downloads".into(),
-				..Default::default()
 			};
 			conf.replace_tilde();
 			// println!("{}, {}", conf.path.display(), home.join("Downloads").display());
-			assert_eq!(conf.path, home.join("Downloads"))
+			assert_eq!(conf.path, home.join("Downloads"));
 		}
 	}
 }

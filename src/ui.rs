@@ -160,7 +160,7 @@ fn render_table(app: &mut App, frame: &mut Frame, area: Rect) {
 			.map(|content| Cell::from(Text::from(format!("\n{content}\n"))))
 			.collect::<Row>()
 			.style(Style::new().fg(app.table.colors.row_fg).bg(color))
-			.height(ITEM_HEIGHT as u16)
+			.height(ITEM_HEIGHT)
 	});
 
 	let longest_item_lens = constraint_len_calculator(&app.items);
@@ -244,7 +244,7 @@ pub fn render_popup(app: &App, frame: &mut Frame) {
 	let width = chunk.width.max(3) - 3;
 	let scroll = text.visual_scroll(width as usize);
 	let x = text.visual_cursor().max(scroll) - scroll + 1;
-	frame.set_cursor_position((chunk.x + x as u16, chunk.y + 1));
+	frame.set_cursor_position((chunk.x + u16::try_from(x).unwrap_or(0), chunk.y + 1));
 }
 
 fn render_footer(app: &App, frame: &mut Frame, area: Rect) {
@@ -317,5 +317,3 @@ fn constraint_len_calculator<T: Data>(items: &[T]) -> (u16, u16, u16) {
 	(service_len, login_len, password_len)
 }
 
-#[cfg(test)]
-mod ui_test {}

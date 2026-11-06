@@ -4,25 +4,55 @@
 ---
 
 ## What is this
-Psu - Password storage utility. And this is my first sql project,so far, he can only
-insert passwords and output them to the console, but I plan to improve him.
 
----
+PSU is a terminal (TUI) password manager. Passwords are stored in a local
+SQLite database and encrypted with XChaCha20-Poly1305; the encryption key is
+derived from a master password using Argon2id. Secrets are zeroized in memory
+(`secrecy` / `zeroize`) where possible.
 
 ## Quickstart
+
 ```
-psu add <SERVICE> <LOGIN> <PASSWORD> // add your password to the database
-psu print -a // prints all passwords and from the id
-psu prind <ID> // if you want to output one specific password
+cargo build --release
+./target/release/psu
 ```
-The functionality is being finalized and some things may be changed
+
+On the first run you will be asked to create a master password. On subsequent
+runs you unlock the database with it. If a database from the old plaintext
+CSV version (`psu.csv`) is found, its records are imported automatically and
+the CSV is renamed to `psu.csv.bak`.
+
+Data is stored in `psu.db` next to the path from the config file
+(`~/.config/psu/config.toml` by default, supports `~` expansion).
+
+## Keybindings
+
+### Global
+- `Esc` — quit / close popup
+- `n` — new password
+- `m` — modify selected password
+- `d` — delete selected password
+- `Enter` — save (in the form popup)
+- `c` — copy selected column to clipboard
+- `p` — copy password to clipboard
+- `P` — copy whole row to clipboard
+- `?` — help
+
+### Navigation
+- `↑` / `k`, `↓` / `j` — move between rows
+- `←` / `h`, `→` / `l` — move between columns
+- `Tab` / `↓`, `↑` — switch fields in the form popup
 
 ---
 
 ## Assembling
-You must have a rust installed then clone and run the build  :
+
+You must have Rust installed, then clone and build:
+
 ```
-  git clone https://github.com/IwantHAPPINESS/psu.git
-  cargo build --release
+git clone https://github.com/IwantHAPPINESS/psu.git
+cd psu
+cargo build --release
 ```
-and get the file from the target folder and run.
+
+The binary is `target/release/psu`.
